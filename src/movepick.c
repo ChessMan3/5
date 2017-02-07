@@ -103,8 +103,8 @@ SMALL
 static void score_quiets(const Pos *pos)
 {
   Stack *st = pos->st;
-  FromToStats *fromTo = pos->fromTo;
-
+  HistoryStats *history = pos->history;
+  
   CounterMoveStats *cmh = (st-1)->counterMoves;
   CounterMoveStats *fmh = (st-2)->counterMoves;
   CounterMoveStats *fmh2 = (st-4)->counterMoves;
@@ -123,7 +123,7 @@ static void score_quiets(const Pos *pos)
     m->value = (*cmh)[piece_on(from)][to]  
               + (*fmh)[piece_on(from)][to]
               + (*fmh2)[piece_on(from)][to]
-              + ft_get(*fromTo, c, move);
+              + history_get(*fromTo, c, move);
   }
 }
 
@@ -133,15 +133,16 @@ static void score_evasions(const Pos *pos)
   // Try captures ordered by MVV/LVA, then non-captures ordered by
   // stats heuristics.
 
-  FromToStats *fromTo = pos->fromTo;
+  HistoryStats *history = pos->history;
   uint32_t c = pos_stm();
 
   for (ExtMove *m = st->cur; m < st->endMoves; m++)
     if (is_capture(pos, m->move))
       m->value =  PieceValue[MG][piece_on(to_sq(m->move))]
-                - (Value)type_of_p(moved_piece(m->move)) + FromToStats_Max;
+                - (Value)type_of_p(moved_piece(m->move)) + HistoryStats_Max;
     else
-      m->value = ft_get(*fromTo, c, m->move);
+      m->value =  (*history)[moved_piece(m->move)][to_sq(m->move)]
+ -                + ft_get(*fromTo, c, m->move);
 }
 
 
