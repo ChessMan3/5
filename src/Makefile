@@ -63,7 +63,7 @@ OBJS = benchmark.o bitbase.o bitboard.o endgame.o evaluate.o main.o \
 # at the end of the line for flag values.
 
 ### 2.1. General and architecture defaults
-debug = no
+debug = yes
 optimize = yes
 arch = x86_32
 bits = 32
@@ -71,7 +71,7 @@ prefetch = no
 popcnt = no
 sse = no
 pext = no
-native = no
+native = yes
 numa = no
 
 ### 2.2 Architecture specific
