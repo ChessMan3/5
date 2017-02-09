@@ -63,7 +63,7 @@ OBJS = benchmark.o bitbase.o bitboard.o endgame.o evaluate.o main.o \
 # at the end of the line for flag values.
 
 ### 2.1. General and architecture defaults
-debug = yes
+debug = no
 optimize = yes
 arch = x86_32
 bits = 32
