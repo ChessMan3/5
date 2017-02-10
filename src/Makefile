@@ -309,6 +309,11 @@ ifeq ($(popcnt),yes)
 	endif
 endif
 
+### native
+ifeq ($(native),yes)
+      CFLAGS += -march=native
+endif
+
 ### 3.8 Link Time Optimization, it works since gcc 4.5 but not on mingw under Windows.
 ### This is a mix of compile and link time options because the lto link phase
 ### needs access to the optimization flags.
