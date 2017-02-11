@@ -564,7 +564,6 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
   while (b) {
     Square s = pop_lsb(&b);
 
-    assert(pawn_passed(pos, Us, s));
     assert(!(pieces_p(PAWN) & forward_bb(Us, s)));
 
     bb = forward_bb(Us, s) & (ei->attackedBy[Them][0] | pieces_c(Them));
@@ -621,7 +620,7 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
 
     // Scale down bonus for candidate passers which need more than one pawn
     // push to become passed.
-         if (!(pos_pawn_passed(Us,s + pawn_push(Us))))
+         if (! pos_pawn_passed(Us,s + pawn_push(Us)))
              mbonus /= 2, ebonus /= 2;
  
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
