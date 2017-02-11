@@ -549,8 +549,7 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 }
 
 
-// evaluate_passed_pawns() evaluates the passed pawns and candidate passed
-// pawns of the given color.
+// evaluate_passed_pawns() evaluates the passed pawns of the given color.
 
 INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
 {
@@ -564,6 +563,7 @@ INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
   while (b) {
     Square s = pop_lsb(&b);
 
+    assert(pawn_passed(pos, Us, s));
     assert(!(pieces_p(PAWN) & forward_bb(Us, s)));
 
     bb = forward_bb(Us, s) & (ei->attackedBy[Them][0] | pieces_c(Them));
@@ -618,11 +618,10 @@ INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
         mbonus += rr + r * 2, ebonus += rr + r * 2;
     } // rr != 0
 
-    // Scale down bonus for candidate passers which need more than one pawn
-    // push to become passed.
-         if (!pos_passed_pawn(Us, s + pawn_push(Us)))
-             mbonus /= 2, ebonus /= 2;
- 
+    // Assign a small bonus when the opponent has no pieces left.
+    if (!pos_non_pawn_material(Them))
+      ebonus += 20;
+
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
   }
 
