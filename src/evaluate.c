@@ -619,13 +619,9 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
         mbonus += rr + r * 2, ebonus += rr + r * 2;
     } // rr != 0
 
-    // Assign a small bonus when the opponent has no pieces left.
-    if (!pos_non_pawn_material(Them))
-      ebonus += 20;
-
     // Scale down bonus for candidate passers which need more than one pawn
-         // push to become passed.
-         if (!pos_pawn_passed(Us, s + pawn_push(Us)))
+    // push to become passed.
+         if (!(pos_pawn_passed(Us,s + pawn_push(Us))))
              mbonus /= 2, ebonus /= 2;
  
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
