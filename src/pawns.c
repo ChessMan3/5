@@ -94,9 +94,8 @@ INLINE Score pawn_evaluate(const Pos *pos, PawnEntry *e, const int Us)
   const int Left  = (Us == WHITE ? DELTA_NW : DELTA_SE);
 
   Bitboard b, neighbours, stoppers, doubled, supported, phalanx;
-  Bitboard lever, leverPush, connected;
   Square s;
-  int opposed, backward;
+  int opposed, lever, connected, backward;
   Score score = SCORE_ZERO;
   const Bitboard* pawnAttacksBB = StepAttacksBB[make_piece(Us, PAWN)];
 
@@ -123,7 +122,6 @@ INLINE Score pawn_evaluate(const Pos *pos, PawnEntry *e, const int Us)
     opposed    = !!(theirPawns & forward_bb(Us, s));
     stoppers   = theirPawns & passed_pawn_mask(Us, s);
     lever      = !!(theirPawns & pawnAttacksBB[s]);
-    leverPush  = theirPawns & pawnAttacksBB[s + Up];
     doubled    = ourPawns   & sq_bb(s + Up);
     neighbours = ourPawns   & adjacent_files_bb(f);
     phalanx    = neighbours & rank_bb_s(s);
@@ -146,14 +144,9 @@ INLINE Score pawn_evaluate(const Pos *pos, PawnEntry *e, const int Us)
       assert(!backward || !(pawn_attack_span(Us ^ 1, s + Up) & neighbours));
     }
 
-    // Passed pawns will be properly scored in evaluation because we need
-    // full attack info to evaluate them. Include also not passed pawns
-    // which could become passed after one or two pawn pushes when are
-    // not attacked more times than defended.
-    if (   !(stoppers ^ lever ^ leverPush)
-        && !(ourPawns & forward_bb(Us, s))
-        && popcount(supported) >= popcount(lever)
-        && popcount(phalanx)   >= popcount(leverPush))
+    // Passed pawns will be properly scored in evaluation because we need		 
+    // full attack info to evaluate them.
+   if (!stoppers && !(ourPawns & forward_bb(Us, s)))
       e->passedPawns[Us] |= sq_bb(s);
 
     // Score this pawn
