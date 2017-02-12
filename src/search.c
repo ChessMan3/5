@@ -183,7 +183,7 @@ void search_init(void)
   for (int imp = 0; imp <= 1; imp++)
     for (int d = 1; d < 128; ++d)
       for (int mc = 1; mc < 64; ++mc) {
-        double r = 0.245 * d * (1.0 - exp(-7.0 / d)) * log(mc);
+        double r = 0.22 * d * (1.0 - exp(-8.5 / d)) * log(mc);
 
         Reductions[NonPV][imp][d][mc] = ((int)lround(r));
         Reductions[PV][imp][d][mc] = max(Reductions[NonPV][imp][d][mc] - 1, 0);
