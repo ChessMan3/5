@@ -25,7 +25,7 @@
 UNAME = $(shell uname)
 
 ### Executable name
-EXE = cfish
+EXE = CChess
 
 ### Installation dir definitions
 PREFIX = /usr/local
@@ -71,7 +71,7 @@ prefetch = no
 popcnt = no
 sse = no
 pext = no
-native = no
+native = yes
 numa = no
 
 ### 2.2 Architecture specific
