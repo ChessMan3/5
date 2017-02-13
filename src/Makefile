@@ -340,7 +340,7 @@ endif
 ifeq ($(comp),gcc)
 	ifeq ($(optimize),yes)
 	ifeq ($(debug),no)
-		CFLAGS += # -flto
+		CFLAGS +=  -flto
 		LDFLAGS += $(CFLAGS)
 	endif
 	endif
@@ -350,7 +350,7 @@ ifeq ($(comp),mingw)
 	ifeq ($(UNAME),Linux)
 	ifeq ($(optimize),yes)
 	ifeq ($(debug),no)
-		CFLAGS += # -flto
+		CFLAGS +=  -flto
 		LDFLAGS += $(CFLAGS)
 	endif
 	endif
