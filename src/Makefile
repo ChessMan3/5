@@ -162,11 +162,11 @@ ifeq ($(COMP),mingw)
 
 	ifeq ($(UNAME),Linux)
 		ifeq ($(bits),64)
-#			ifeq ($(shell which x86_64-w64-mingw32-cc-posix),)
+ 			ifeq ($(shell which x86_64-w64-mingw32-cc-posix),)
 				CC=x86_64-w64-mingw32-gcc
-#			else
-#				CC=x86_64-w64-mingw32-cc-posix
-#			endif
+			else
+				CC=x86_64-w64-mingw32-cc-posix
+			endif
 		else
 			ifeq ($(shell which i686-w64-mingw32-cc-posix),)
 				CC=i686-w64-mingw32-cc
