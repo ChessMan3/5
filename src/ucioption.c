@@ -101,7 +101,7 @@ static Option options_map[] = {
   { "Slow Mover", OPT_TYPE_SPIN, 89, 10, 1000, NULL, NULL, 0, NULL },
   { "nodestime", OPT_TYPE_SPIN, 0, 0, 10000, NULL, NULL, 0, NULL },
   { "UCI_Chess960", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },
-  { "SyzygyPath", OPT_TYPE_STRING, 0, 0, 0, "<C:\Tablebases\Syzygy\>", on_tb_path, 0, NULL },
+  { "SyzygyPath", OPT_TYPE_STRING, 0, 0, 0, "<C:\\Tablebases\\Syzygy\\>", on_tb_path, 0, NULL },
   { "SyzygyProbeDepth", OPT_TYPE_SPIN, 1, 1, 100, NULL, NULL, 0, NULL },
   { "Syzygy50MoveRule", OPT_TYPE_CHECK, 1, 0, 0, NULL, NULL, 0, NULL },
   { "SyzygyProbeLimit", OPT_TYPE_SPIN, 6, 0, 6, NULL, NULL, 0, NULL },
