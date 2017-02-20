@@ -617,7 +617,7 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
     
     // Scale down bonus for candidate passers which need more than one pawn
          // push to become passed.
-         if (!(pawn_passed_p(Us, s + pawn_push(Us))))
+         if (pawn_passed(!pos,Us, s + pawn_push(Us)))
              mbonus /= 2, ebonus /= 2;
 
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
