@@ -556,7 +556,8 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
 
   while (b) {
     Square s = pop_lsb(&b);
-
+    
+    assert(pawn_passed(pos, Us, s));
     assert(!(pieces_p(PAWN) & forward_bb(Us, s)));
 
     bb = forward_bb(Us, s) & (ei->attackedBy[Them][0] | pieces_c(Them));
