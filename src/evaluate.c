@@ -764,7 +764,7 @@ Value evaluate(const Pos *pos)
   // Early exit if score is high
    v = (mg_value(score) + eg_value(score)) / 2;
    if (abs(v) > LazyThreshold)
-      return side_to_move(pos)() == WHITE ? v : -v;
+      return (side_to_move(pos))() == WHITE ? v : -v;
   
   // Initialize attack and king safety bitboards.
   ei.attackedBy[WHITE][0] = ei.attackedBy[BLACK][0] = 0;
@@ -820,8 +820,8 @@ Value evaluate(const Pos *pos)
   // Interpolate between a middlegame and a (scaled by 'sf') endgame score
   //  Value v =  mg_value(score) * ei.me->gamePhase
   //           + eg_value(score) * (PHASE_MIDGAME - ei.me->gamePhase) * sf / SCALE_FACTOR_NORMAL;
-       v =  mg_value(score) * int(ei.me->game_phase())
-       eg_value(score) * int(PHASE_MIDGAME - ei.me->game_phase()) * sf / SCALE_FACTOR_NORMAL;
+       v =  mg_value(score) * ((int)(ei.me->game_phase()))
+       eg_value(score) * ((int)(PHASE_MIDGAME - ei.me->game_phase())) * (sf / SCALE_FACTOR_NORMAL);
   
   v /= PHASE_MIDGAME;
 
