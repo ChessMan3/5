@@ -105,8 +105,8 @@ static const Score Outpost[][2] = {
 // knights and bishops which can reach an outpost square in one move,
 // bigger if outpost square is supported by a pawn.
 static const Score ReachableOutpost[][2] = {
-  { S(21, 5), S(35, 8) }, // Knights
-  { S( 8, 0), S(14, 4) }  // Bishops
+  { S(22, 6), S(33, 9) }, // Knights
+  { S( 9, 2), S(14, 4) }  // Bishops
 };
 
 // RookOnFile[semiopen/open] contains bonuses for each rook when there is
@@ -116,13 +116,14 @@ static const Score RookOnFile[2] = { S(20, 7), S(45, 20) };
 // ThreatBySafePawn[PieceType] contains bonuses according to which piece
 // type is attacked by a pawn which is protected or is not attacked.
 static const Score ThreatBySafePawn[8] = {
-  S(0, 0), S(0, 0), S(176, 139), S(131, 127), S(217, 218), S(203, 215) };
+  S(0, 0), S(0, 0), S(176, 139), S(131, 127), S(217, 218), S(203, 215) 
+};
 
 // ThreatByMinor/ByRook[attacked PieceType] contains bonuses according to
 // which piece type attacks which one. Attacks on lesser pieces which are
 // pawn defended are not considered.
 static const Score ThreatByMinor[8] = {
-  S(0, 0), S(0, 33), S(45, 43), S(46, 47), S(72,107), S(48,118)
+  S(0, 0), S(0, 33), S(45, 43), S(46, 47), S(72, 107), S(48, 118)
 };
 
 static const Score ThreatByRook[8] = {
@@ -142,8 +143,8 @@ static const Value Passed[][8] = {
 
 // PassedFile[File] contains a bonus according to the file of a passed pawn
 static const Score PassedFile[8] = {
-  S(  9, 10), S( 2, 10), S( 1, -8), S(-20,-12),
-  S(-20,-12), S( 1, -8), S( 2, 10), S(  9, 10)
+    S(  9, 10), S( 2, 10), S( 1, -8), S(-20,-12),
+    S(-20,-12), S( 1, -8), S( 2, 10), S(  9, 10)
 };
 
 // Assorted bonuses and penalties used by evaluation
@@ -179,6 +180,8 @@ static const int KingAttackWeights[8] = { 0, 0, 78, 56, 45, 11 };
 #define BishopCheck       588
 #define KnightCheck       924
 
+// Threshold for lazy evaluation
+  const Value LazyThreshold = (Value)1500;
 
 // eval_init() initializes king and attack bitboards for a given color
 // adding pawn attacks. To be done at the beginning of the evaluation.
@@ -186,8 +189,11 @@ static const int KingAttackWeights[8] = { 0, 0, 78, 56, 45, 11 };
 INLINE void evalinfo_init(const Pos *pos, EvalInfo *ei, const int Us)
 {
   const int Them = (Us == WHITE ? BLACK   : WHITE);
+  const int Up   = (Us == WHITE ? DELTA_N : DELTA_S);
   const int Down = (Us == WHITE ? DELTA_S : DELTA_N);
+  const Bitboard LowRanks = (Us == WHITE ? Rank2BB | Rank3BB: Rank7BB | Rank6BB);
 
+  // Initialise the attack bitboards with the king and pawn information
   ei->pinnedPieces[Us] = pinned_pieces(pos, Us);
   Bitboard b = ei->attackedBy[Them][KING];
   ei->attackedBy[Them][0] |= b;
@@ -734,6 +740,7 @@ Value evaluate(const Pos *pos)
   assert(!pos_checkers());
 
   Score mobility[2] = { SCORE_ZERO, SCORE_ZERO };
+  Value v;
   EvalInfo ei;
 
   // Probe the material hash table
@@ -754,6 +761,11 @@ Value evaluate(const Pos *pos)
   ei.pi = pawn_probe(pos);
   score += ei.pi->score;
 
+  // Early exit if score is high
+   v = (mg_value(score) + eg_value(score)) / 2;
+   if (abs(v) > LazyThreshold)
+      return side_to_move(pos)() == WHITE ? v : -v;
+  
   // Initialize attack and king safety bitboards.
   ei.attackedBy[WHITE][0] = ei.attackedBy[BLACK][0] = 0;
   ei.attackedBy[WHITE][KING] = attacks_from_king(square_of(WHITE, KING));
@@ -808,9 +820,9 @@ Value evaluate(const Pos *pos)
   // Interpolate between a middlegame and a (scaled by 'sf') endgame score
   //  Value v =  mg_value(score) * ei.me->gamePhase
   //           + eg_value(score) * (PHASE_MIDGAME - ei.me->gamePhase) * sf / SCALE_FACTOR_NORMAL;
-  Value v =  mg_value(score) * ei.me->gamePhase
-           + eg * (PHASE_MIDGAME - ei.me->gamePhase) * sf / SCALE_FACTOR_NORMAL;
-
+       v =  mg_value(score) * int(ei.me->game_phase())
+       eg_value(score) * int(PHASE_MIDGAME - ei.me->game_phase()) * sf / SCALE_FACTOR_NORMAL;
+  
   v /= PHASE_MIDGAME;
 
   return (pos_stm() == WHITE ? v : -v) + Tempo; // Side to move point of view
