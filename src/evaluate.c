@@ -246,7 +246,7 @@ INLINE Score evaluate_piece(const Pos *pos, EvalInfo *ei, Score *mobility,
       // Bonus for outpost squares
       bb = OutpostRanks & ~ei->pi->pawnAttacksSpan[Them];
       if (bb & sq_bb(s))
-        score += (Outpost[Pt == BISHOP][!!(ei->attackedBy[Us][PAWN] & sq_bb(s))]) * 2;
+        score += Outpost[Pt == BISHOP][!!(ei->attackedBy[Us][PAWN] & sq_bb(s))] * 2;
       else {
         bb &= b & ~pieces_c(Us);
         if (bb)
