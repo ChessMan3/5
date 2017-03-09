@@ -35,6 +35,8 @@
 #include "uci.h"
 #include "tbprobe.h"
 
+
+
 #define load_rlx(x) atomic_load_explicit(&(x), memory_order_relaxed)
 #define store_rlx(x,y) atomic_store_explicit(&(x), y, memory_order_relaxed)
 
@@ -45,6 +47,7 @@ int TB_Cardinality;
 int TB_RootInTB;
 int TB_UseRule50;
 Depth TB_ProbeDepth;
+
 
 // Different node types, used as a template parameter
 
@@ -202,6 +205,9 @@ void search_init(void)
 }
 
 
+
+
+
 // search_clear() resets search state to zero, to obtain reproducible results
 
 void search_clear()
@@ -219,8 +225,12 @@ void search_clear()
     stats_clear(pos->fromTo);
   }
 
+
   mainThread.previousScore = VALUE_INFINITE;
 }
+
+
+
 
 
 // perft() is our utility to verify move generation. All the leaf nodes
@@ -333,7 +343,8 @@ void mainthread_search(void)
       Pos *p = Threads.pos[idx];
       Depth depthDiff = p->completedDepth - bestThread->completedDepth;
       Value scoreDiff = p->rootMoves->move[0].score - bestThread->rootMoves->move[0].score;
-      if ( (scoreDiff > 0 && depthDiff >= 0) )
+      if (   (depthDiff > 0 && scoreDiff >= 0)
+          || (scoreDiff > 0 && depthDiff >= 0))
         bestThread = p;
     }
   }
@@ -367,6 +378,7 @@ void thread_search(Pos *pos)
   Value bestValue, alpha, beta, delta;
   Move easyMove = 0;
 
+
   Stack *ss = pos->st; // At least the fifth element of the allocated array.
   for (int i = -5; i < 3; i++)
     memset(SStackBegin(ss[i]), 0, SStackSize);
@@ -398,6 +410,8 @@ void thread_search(Pos *pos)
   if (skill.enabled())
       multiPV = std::max(multiPV, (size_t)4);
 #endif
+
+  if (option_value(OPT_TACTICAL_MODE))  multiPV = 256;
 
   RootMoves *rm = pos->rootMoves;
   multiPV = min(multiPV, rm->size);
@@ -501,6 +515,7 @@ void thread_search(Pos *pos)
 
         assert(alpha >= -VALUE_INFINITE && beta <= VALUE_INFINITE);
       }
+
 
       // Sort the PV lines searched so far and update the GUI
       stable_sort(&rm->move[PVFirst], PVIdx - PVFirst + 1);
@@ -651,6 +666,7 @@ static Value value_to_tt(Value v, int ply)
 }
 
 
+
 // value_from_tt() is the inverse of value_to_tt(): It adjusts a mate score
 // from the transposition table (which refers to the plies to mate/be mated
 // from current position) to "plies to mate/be mated from the root".
@@ -661,6 +677,9 @@ static Value value_from_tt(Value v, int ply)
         : v >= VALUE_MATE_IN_MAX_PLY  ? v - ply
         : v <= VALUE_MATED_IN_MAX_PLY ? v + ply : v;
 }
+
+
+
 
 
 // update_pv() adds current move and appends child pv[]
@@ -835,6 +854,9 @@ static void uci_print_pv(Pos *pos, Depth depth, Value alpha, Value beta)
 }
 
 
+
+
+
 // extract_ponder_from_tt() is called in case we have no ponder move
 // before exiting the search, for instance, in case we stop the search
 // during a fail high at root. We try hard to have a ponder move to
@@ -910,6 +932,9 @@ void TB_rank_root_moves(Pos *pos, ExtMove *list, int num_moves)
     for (int i = 0; i < num_moves; i++)
       list[i].value = 0;
 }
+
+
+
 
 
 // start_thinking() wakes up the main thread to start a new search,

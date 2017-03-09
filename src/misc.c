@@ -1,3 +1,4 @@
+
 /*
   Stockfish, a UCI chess playing engine derived from Glaurung 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
@@ -44,6 +45,7 @@ HANDLE io_mutex;
 / can toggle the logging of std::cout and std:cin at runtime whilst preserving
 // usual I/O functionality, all without changing a single line of code!
 // Idea from http://groups.google.com/group/comp.lang.c++/msg/1d941c0f26ea0d81
+
 
 struct Tie: public streambuf { // MSVC requires split streambuf for cin and cout
 
@@ -124,12 +126,12 @@ void print_engine_info(int to_uci)
     printf("%02d%02d%02d", day, month, year % 100);
   }
 
-  printf("%s%s%s%s\n", Is64Bit ? " 64" : ""
+  printf("%s%s%s%s\n", Is64Bit ? " 64" : " 32"
                      , HasPext ? " BMI2" : (HasPopCnt ? " POPCNT" : "")
                      , HasNuma ? " NUMA" : ""
                      , to_uci ? "\nid author T. Romstad, M. Costalba, "
                                 "J. Kiiski, G. Linscott"
-                              : " by Syzygy based on Stockfish");
+                              : " by Syzygy based on Stockfish - Modified by M.Z");
   fflush(stdout);
 }
 

@@ -55,8 +55,6 @@ OBJS = benchmark.o bitbase.o bitboard.o endgame.o evaluate.o main.o \
 # popcnt = yes/no     --- -DUSE_POPCNT     --- Use popcnt asm-instruction
 # sse = yes/no        --- -msse            --- Use Intel Streaming SIMD Extensions
 # pext = yes/no       --- -DUSE_PEXT       --- Use pext x86_64 asm-instruction
-# native = yes/no     --- -march=native    --- Optimize for local CPU
-# numa = yes/no       --- -DNUMA           --- Enable NUMA support
 #
 # Note that Makefile is space sensitive, so when adding new architectures
 # or modifying existing flags, you have to make sure there are no extra spaces
@@ -71,8 +69,6 @@ prefetch = no
 popcnt = no
 sse = no
 pext = no
-native = no
-numa = no
 
 ### 2.2 Architecture specific
 
@@ -162,11 +158,11 @@ ifeq ($(COMP),mingw)
 
 	ifeq ($(UNAME),Linux)
 		ifeq ($(bits),64)
- 			ifeq ($(shell which x86_64-w64-mingw32-cc-posix),)
+#			ifeq ($(shell which x86_64-w64-mingw32-cc-posix),)
 				CC=x86_64-w64-mingw32-gcc
-			else
-				CC=x86_64-w64-mingw32-cc-posix
-			endif
+#			else
+#				CC=x86_64-w64-mingw32-cc-posix
+#			endif
 		else
 			ifeq ($(shell which i686-w64-mingw32-cc-posix),)
 				CC=i686-w64-mingw32-cc
@@ -317,11 +313,6 @@ ifeq ($(pext),yes)
 	ifeq ($(comp),$(filter $(comp),gcc clang mingw))
 		CFLAGS += -mbmi2
 	endif
-endif
-
-### native
-ifeq ($(native),yes)
-	CFLAGS += -march=native
 endif
 
 ### numa

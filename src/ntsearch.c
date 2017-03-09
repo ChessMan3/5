@@ -487,9 +487,11 @@ moves_loop: // When in check search starts from here.
         // Decrease/increase reduction for moves with a good/bad history.
         r = max(DEPTH_ZERO, (r / ONE_PLY - ss->history / 20000) * ONE_PLY);
       }
+		
+	  if ( ( ss->ply < depth / 2 - ONE_PLY) && option_value(OPT_TACTICAL_MODE))
+		  r = DEPTH_ZERO;
 
       Depth d = max(newDepth - r, ONE_PLY);
-
       value = -search_NonPV(pos, ss+1, -(alpha+1), d, 1);
 
       doFullDepthSearch = (value > alpha && d != newDepth);

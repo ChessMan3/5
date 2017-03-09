@@ -46,6 +46,7 @@ static void on_clear_hash(Option *opt)
     search_clear();
 }
 
+
 static void on_hash_size(Option *opt)
 {
   delayed_settings.tt_size = opt->value;
@@ -92,6 +93,7 @@ static Option options_map[] = {
   { "Threads", OPT_TYPE_SPIN, 1, 1, 128, NULL, on_threads, 0, NULL },
   { "Hash", OPT_TYPE_SPIN, 16, 1, MAXHASHMB, NULL, on_hash_size, 0, NULL },
   { "Clear Hash", OPT_TYPE_BUTTON, 0, 0, 0, NULL, on_clear_hash, 0, NULL },
+  { "Tactical Mode", OPT_TYPE_CHECK, 0, 0, 0, NULL, on_clear_hash, 0, NULL },
   { "Ponder", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },
   { "MultiPV", OPT_TYPE_SPIN, 1, 1, 500, NULL, NULL, 0, NULL },
   { "Repetition Fix", OPT_TYPE_CHECK, 0, 0, 0, NULL, NULL, 0, NULL },

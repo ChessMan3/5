@@ -98,6 +98,7 @@ static const Score MobilityBonus[][32] = {
 // pieces if they can reach an outpost square, bigger if that square is
 // supported by a pawn. If the minor piece occupies an outpost square
 // then score is doubled.
+
 static const Score Outpost[][2] = {
   { S(22, 6), S(33, 9) }, // Knight
   { S( 9, 2), S(14, 4) }  // Bishop
@@ -173,8 +174,13 @@ static const int KingAttackWeights[8] = { 0, 0, 78, 56, 45, 11 };
 #define KnightCheck       924
 
 
+  // Threshold for lazy evaluation
+  const Value LazyEval = (1500);
+  
 // eval_init() initializes king and attack bitboards for a given color
 // adding pawn attacks. To be done at the beginning of the evaluation.
+
+
 
 INLINE void evalinfo_init(const Pos *pos, EvalInfo *ei, const int Us)
 {
@@ -186,6 +192,7 @@ INLINE void evalinfo_init(const Pos *pos, EvalInfo *ei, const int Us)
   ei->attackedBy[Them][0] |= b;
   ei->attackedBy[Us][0] |= ei->attackedBy[Us][PAWN] = ei->pi->pawnAttacks[Us];
   ei->attackedBy2[Us] = ei->attackedBy[Us][PAWN] & ei->attackedBy[Us][KING];
+
 
   // Init king safety tables only if we are going to use them
   if (pos_non_pawn_material(Us) >= QueenValueMg) {
@@ -232,10 +239,6 @@ INLINE Score evaluate_piece(const Pos *pos, EvalInfo *ei, Score *mobility,
       ei->kingAdjacentZoneAttacksCount[Us] += popcount(b & ei->attackedBy[Them][KING]);
     }
 
-    if (Pt == QUEEN)
-      b &= ~(  ei->attackedBy[Them][KNIGHT]
-             | ei->attackedBy[Them][BISHOP]
-             | ei->attackedBy[Them][ROOK]);
 
     int mob = popcount(b & mobilityArea[Us]);
 
@@ -294,6 +297,7 @@ INLINE Score evaluate_piece(const Pos *pos, EvalInfo *ei, Score *mobility,
       }
     }
 
+
     if (Pt == QUEEN) {
       // Penalty if any relative pin or discovered attack against the queen
       Bitboard pinners;
@@ -321,7 +325,6 @@ INLINE Score evaluate_pieces(const Pos *pos, EvalInfo *ei, Score *mobility,
         + evaluate_piece(pos, ei, mobility, mobilityArea, WHITE, QUEEN)
         - evaluate_piece(pos, ei, mobility, mobilityArea, BLACK, QUEEN);
 }
-
 
 // evaluate_king() assigns bonuses and penalties to a king of a given color.
 
@@ -445,7 +448,6 @@ INLINE Score evaluate_king(const Pos *pos, EvalInfo *ei, int Us)
   return score;
 }
 
-
 // evaluate_threats() assigns bonuses according to the types of the
 // attacking and the attacked pieces.
 
@@ -465,6 +467,7 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 
   // Non-pawn enemies attacked by a pawn
   weak = pieces_c(Them) & ~pieces_p(PAWN) & ei->attackedBy[Us][PAWN];
+
 
   if (weak) {
     b = pieces_cp(Us, PAWN) & ( ~ei->attackedBy[Them][0]
@@ -507,6 +510,7 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 
     score += Hanging * popcount(weak & ~ei->attackedBy[Them][0]);
 
+
     b = weak & ei->attackedBy[Us][KING];
     if (b)
       score += ThreatByKing[!!more_than_one(b)];
@@ -526,9 +530,9 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 
   score += ThreatByPawnPush * popcount(b);
 
+
   return score;
 }
-
 
 // evaluate_passed_pawns() evaluates the passed pawns of the given color.
 
@@ -599,17 +603,12 @@ INLINE Score evaluate_passed_pawns(const Pos *pos, EvalInfo *ei, const int Us)
         mbonus += rr + r * 2, ebonus += rr + r * 2;
     } // rr != 0
 
-    // Assign a small bonus when the opponent has no pieces left.
-    if (!pos_non_pawn_material(Them))
-      ebonus += 20;
-
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
   }
 
   // Add the scores to the middlegame and endgame eval.
   return score;
 }
-
 
 // evaluate_space() computes the space evaluation for a given side. The
 // space evaluation is a simple bonus based on the number of safe squares
@@ -648,7 +647,6 @@ INLINE Score evaluate_space(const Pos *pos, EvalInfo *ei, const int Us)
 
   return make_score(bonus * weight * weight / 18, 0);
 }
-
 
 // evaluate_initiative() computes the initiative correction value for the
 // position, i.e., second order bonus/malus based on the known
@@ -692,6 +690,7 @@ INLINE int evaluate_scale_factor(const Pos *pos, EvalInfo *ei, Value eg)
           && pos_non_pawn_material(BLACK) == BishopValueMg)
         sf = more_than_one(pieces_p(PAWN)) ? 31 : 9;
 
+
       // Endgame with opposite-colored bishops, but also other pieces. Still
       // a bit drawish, but not as drawish as with only the two bishops.
       else
@@ -705,10 +704,19 @@ INLINE int evaluate_scale_factor(const Pos *pos, EvalInfo *ei, Value eg)
       sf = 37 + 7 * piece_count(strongSide, PAWN);
   }
 
-  return sf;
-}
+    return sf;
+  }
 
+  Value lazy_eval(Value mg, Value eg) {
 
+    if (mg > LazyEval && eg > LazyEval)
+        return  LazyEval + ((mg + eg) / 2 - LazyEval) / 4;
+
+    else if (mg < -LazyEval && eg < -LazyEval)
+        return -LazyEval + ((mg + eg) / 2 + LazyEval) / 4;
+
+    return VALUE_ZERO;
+  }
 // evaluate() is the main evaluation function. It returns a static evaluation
 // of the position from the point of view of the side to move.
 
@@ -737,6 +745,12 @@ Value evaluate(const Pos *pos)
   ei.pi = pawn_probe(pos);
   score += ei.pi->score;
 
+  // We have taken into account all cheap evaluation terms.
+  // If score exceeds a threshold return a lazy evaluation.
+  Value lazy = lazy_eval(mg_value(score), eg_value(score));
+  if (lazy)
+      return pos_stm() == WHITE ? lazy : -lazy;
+  
   // Initialize attack and king safety bitboards.
   ei.attackedBy[WHITE][0] = ei.attackedBy[BLACK][0] = 0;
   ei.attackedBy[WHITE][KING] = attacks_from_king(square_of(WHITE, KING));
