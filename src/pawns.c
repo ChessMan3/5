@@ -49,8 +49,8 @@ static const Score Lever[8] = {
   S(17, 16), S(33, 32), S(0, 0), S(0, 0)
 };
 
-  // Weakness of our pawn shelter in front of the king by [distance from edge][rank].
-// RANK_1 = 0 is used for files where we have no pawns or our pawn is behind our king.
+ // Weakness of our pawn shelter in front of the king by [distance from edge][rank].
+ // RANK_1 = 0 is used for files where we have no pawns or our pawn is behind our king.
 static const Value ShelterWeakness[][8] = {
   { V(100), V(20), V(10), V(46), V(82), V( 86), V( 98) },
   { V(116), V( 4), V(28), V(87), V(94), V(108), V(104) },
@@ -58,11 +58,11 @@ static const Value ShelterWeakness[][8] = {
   { V( 75), V(12), V(43), V(59), V(90), V( 84), V(112) }
 };
 
-  // Danger of enemy pawns moving toward our king by [type][distance from edge][rank].
-// For the unopposed and unblocked cases, RANK_1 = 0 is used when opponent has no pawn
-// on the given file, or their pawn is behind our king.
+ // Danger of enemy pawns moving toward our king by [type][distance from edge][rank].
+ // For the unopposed and unblocked cases, RANK_1 = 0 is used when opponent has no pawn
+ // on the given file, or their pawn is behind our king.
 static const Value StormDanger[][4][8] = {
-  { { V( 0),  V(-290), V(-274), V(57), V(41) },  //BlockedByKing 
+  { { V( 0),  V(-290), V(-274), V(57), V(41) },  //BlockedByKing
     { V( 0),  V(  60), V( 144), V(39), V(13) },
     { V( 0),  V(  65), V( 141), V(41), V(34) },
     { V( 0),  V(  53), V( 127), V(56), V(14) } },
@@ -71,7 +71,7 @@ static const Value StormDanger[][4][8] = {
     { V( 1),  V(  47), V( 110), V(44), V(24) },
     { V( 0),  V(  72), V( 127), V(50), V(31) } },
   { { V( 0),  V(   0), V(  79), V(23), V( 1) },  //BlockedByPawn
-   { V( 0),  V(   0), V( 148), V(27), V( 2) },
+    { V( 0),  V(   0), V( 148), V(27), V( 2) },
     { V( 0),  V(   0), V( 161), V(16), V( 1) },
     { V( 0),  V(   0), V( 171), V(22), V(15) } },
   { { V(22),  V(  45), V( 104), V(62), V( 6) },  //Unblocked

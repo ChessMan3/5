@@ -78,19 +78,19 @@ typedef struct EvalInfo EvalInfo;
 // MobilityArea.
 static const Score MobilityBonus[][32] = {
   {0}, {0},
-     { S(-75,-76), S(-57,-54), S( -9,-28), S( -2,-10), S(  6,  5), S( 14, 12), // Knights
-       S( 22, 26), S( 29, 29), S( 36, 29) },
-     { S(-48,-59), S(-20,-23), S( 16, -3), S( 26, 13), S( 38, 24), S( 51, 42), // Bishops
-       S( 55, 54), S( 63, 57), S( 63, 65), S( 68, 73), S( 81, 78), S( 81, 86),
-       S( 91, 88), S( 98, 97) },
-     { S(-60,-77), S(-26,-20), S(-11, 27), S( -6, 57), S( -3, 69), S( -1, 82), // Rooks
-       S( 10,109), S( 16,121), S( 24,131), S( 25,143), S( 32,155), S( 32,163),
-       S( 43,167), S( 48,171), S( 56,173) },
-     { S(-39,-36), S(-21,-15), S(  3,  8), S(  3, 18), S( 14, 34), S( 22, 54), // Queens
-       S( 28, 61), S( 41, 73), S( 43, 79), S( 48, 92), S( 56, 94), S( 60,104),
-       S( 60,113), S( 66,120), S( 67,123), S( 70,126), S( 71,133), S( 73,136),
-       S( 79,140), S( 88,143), S( 88,148), S( 99,166), S(102,170), S(102,175),
-       S(106,184), S(109,191), S(113,206), S(116,212) }
+  { S(-75,-76), S(-57,-54), S( -9,-28), S( -2,-10), S(  6,  5), S( 14, 12), // Knights
+    S( 22, 26), S( 29, 29), S( 36, 29) },
+  { S(-48,-59), S(-20,-23), S( 16, -3), S( 26, 13), S( 38, 24), S( 51, 42), // Bishops
+    S( 55, 54), S( 63, 57), S( 63, 65), S( 68, 73), S( 81, 78), S( 81, 86),
+    S( 91, 88), S( 98, 97) },
+  { S(-60,-77), S(-26,-20), S(-11, 27), S( -6, 57), S( -3, 69), S( -1, 82), // Rooks
+    S( 10,109), S( 16,121), S( 24,131), S( 25,143), S( 32,155), S( 32,163),
+    S( 43,167), S( 48,171), S( 56,173) },
+  { S(-39,-36), S(-21,-15), S(  3,  8), S(  3, 18), S( 14, 34), S( 22, 54), // Queens
+    S( 28, 61), S( 41, 73), S( 43, 79), S( 48, 92), S( 56, 94), S( 60,104),
+    S( 60,113), S( 66,120), S( 67,123), S( 70,126), S( 71,133), S( 73,136),
+    S( 79,140), S( 88,143), S( 88,148), S( 99,166), S(102,170), S(102,175),
+    S(106,184), S(109,191), S(113,206), S(116,212) }
 };
 
 // Outpost[knight/bishop][supported by pawn] contains bonuses for minor
@@ -234,7 +234,7 @@ INLINE Score evaluate_piece(const Pos *pos, EvalInfo *ei, Score *mobility,
       b &= ~(  ei->attackedBy[Them][KNIGHT]
              | ei->attackedBy[Them][BISHOP]
              | ei->attackedBy[Them][ROOK]);
-
+    
     int mob = popcount(b & mobilityArea[Us]);
 
     mobility[Us] += MobilityBonus[Pt][mob];
@@ -374,7 +374,7 @@ INLINE Score evaluate_king(const Pos *pos, EvalInfo *ei, int Us)
 
     // Analyse the safe enemy's checks which are possible on next move...
     safe  = ~pieces_c(Them);
-    safe &= ~(ei->attackedBy[Us][0] | (undefended & ei->attackedBy2[Them]));
+    safe &= ~ei->attackedBy[Us][0] | (undefended & ei->attackedBy2[Them]);
 
     // ... and some other potential checks, only requiring the square to be
     // safe from pawn-attacks, and not being occupied by a blocked pawn.
@@ -458,7 +458,7 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
 
   enum { Minor, Rook };
 
-  Bitboard b, weak, defended, safeThreats;
+  Bitboard b, weak, defended, stronglyProtected, safeThreats;
   Score score = SCORE_ZERO;
 
   // Non-pawn enemies attacked by a pawn
@@ -477,12 +477,17 @@ INLINE Score evaluate_threats(const Pos *pos, EvalInfo *ei, const int Us)
       score += ThreatBySafePawn[piece_on(pop_lsb(&safeThreats)) - 8 * Them];
   }
 
-  // Non-pawn enemies defended by a pawn
-  defended = pieces_c(Them) & ~pieces_p(PAWN) & ei->attackedBy[Them][PAWN];
+  // Squares strongly protected by the opponent, either because they attack the
+  // square with a pawn, or because they attack the square twice and we don't.
+  stronglyProtected =  ei->attackedBy[Them][PAWN]
+                     | (ei->attackedBy2[Them] & ei->attackedBy2[Us]);
+  
+  // Non-pawn enemies, strongly protected
+  defended = pieces_c(Them) & ~pieces_p(PAWN) & stronglyProtected;
 
-  // Enemies not defended by a pawn and under our attack
+  // Enemies not strongly protected and under our attack
   weak =   pieces_c(Them)
-        & ~ei->attackedBy[Them][PAWN]
+        & ~stronglyProtected
         &  ei->attackedBy[Us][0];
 
   // Add a bonus according to the kind of attacking pieces
@@ -597,15 +602,11 @@ INLINE Score evaluate_passer_pawns(const Pos *pos, EvalInfo *ei, const int Us)
         mbonus += rr + r * 2, ebonus += rr + r * 2;
     } // rr != 0
 
-    // Assign a small bonus when the opponent has no pieces left.
-    if (!pos_non_pawn_material(Them))
-      ebonus += 20;
-
     // Scale down bonus for candidate passers which need more than one pawn
     // push to become passed.
-       if (!pawn_passed(pos, Us, s + pawn_push(Us))) 
+      if (!pawn_passed(pos, Us, s + pawn_push(Us))) 
               mbonus /= 2, ebonus /= 2;
-    
+     
     score += make_score(mbonus, ebonus) + PassedFile[file_of(s)];
   }
 
@@ -685,27 +686,25 @@ INLINE int evaluate_scale_factor(const Pos *pos, EvalInfo *ei, Value eg)
 
   // If we don't already have an unusual scale factor, check for certain
   // types of endgames, and use a lower scale for those.
-  if (    ei->me->gamePhase < PHASE_MIDGAME
-      && (sf == SCALE_FACTOR_NORMAL || sf == SCALE_FACTOR_ONEPAWN)) {
+  if (sf == SCALE_FACTOR_NORMAL || sf == SCALE_FACTOR_ONEPAWN)  {   
     if (opposite_bishops(pos)) {
       // Endgame with opposite-colored bishops and no other pieces
       // (ignoring pawns) is almost a draw, in case of KBP vs KB, it is
       // even more a draw.
       if (   pos_non_pawn_material(WHITE) == BishopValueMg
           && pos_non_pawn_material(BLACK) == BishopValueMg)
-        sf = more_than_one(pieces_p(PAWN)) ? 31 : 9;
+        return more_than_one(pieces_p(PAWN)) ? 31 : 9;
 
       // Endgame with opposite-colored bishops, but also other pieces. Still
       // a bit drawish, but not as drawish as with only the two bishops.
-      else
-        sf = 46;
+      return 46;
     }
     // Endings where weaker side can place his king in front of the opponent's
     // pawns are drawish.
     else if (    abs(eg) <= BishopValueEg
              &&  piece_count(strongSide, PAWN) <= 2
              && !pawn_passed(pos, strongSide ^ 1, square_of(strongSide ^ 1, KING)))
-      sf = 37 + 7 * piece_count(strongSide, PAWN);
+      return 37 + 7 * piece_count(strongSide, PAWN);
   }
 
   return sf;
